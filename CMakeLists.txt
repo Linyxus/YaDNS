@@ -7,34 +7,34 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
 add_library(libdns_relay
-        includes/db/io.h
-        includes/db/parse.h
-        includes/db/types.h
+        include/db/io.h
+        include/db/parse.h
+        include/db/types.h
         src/db/dn.c
         src/db/parse.c
-        includes/dns/parse.h
-        includes/dns/types.h
-        includes/dns/utils.h
+        include/dns/parse.h
+        include/dns/types.h
+        include/dns/utils.h
         src/dns/error.c
         src/dns/parse.c
-        includes/utils/error.h
-        includes/utils/queue.h
-        includes/utils/total_map.h
+        include/utils/error.h
+        include/utils/queue.h
+        include/utils/total_map.h
         src/utils/err.c
         src/utils/queue.c
         src/utils/total_map.c
-        includes/utils/argparse.h
-        includes/utils/logging.h
-        includes/network/query_pool.h
+        include/utils/argparse.h
+        include/utils/logging.h
+        include/network/query_pool.h
         src/utils/argparse.c
         src/network/query_pool.c
-        includes/network/conn_pool.h src/network/conn_pool.c src/db/io.c includes/db/tree.h src/db/tree.c includes/dns/compose.h src/dns/compose.c
-        includes/db/cache.h src/db/cache.c includes/network/udp_pool.h src/network/udp_pool.c includes/server/pools.h src/server/pools.c includes/server/loop.h src/server/loop.c includes/server/socket.h src/server/socket.c includes/server/db_cache.h src/server/db_cache.c includes/server/curl.h src/server/curl.c includes/server/dns_server.h src/server/dns_server.c)
+        include/network/conn_pool.h src/network/conn_pool.c src/db/io.c include/db/tree.h src/db/tree.c include/dns/compose.h src/dns/compose.c
+        include/db/cache.h src/db/cache.c include/network/udp_pool.h src/network/udp_pool.c include/server/pools.h src/server/pools.c include/server/loop.h src/server/loop.c include/server/socket.h src/server/socket.c include/server/db_cache.h src/server/db_cache.c include/server/curl.h src/server/curl.c include/server/dns_server.h src/server/dns_server.c)
 
 target_include_directories(
         libdns_relay
         PUBLIC
-        "includes"
+        "include"
 )
 target_link_libraries(libdns_relay CONAN_PKG::libuv)
 target_link_libraries(libdns_relay CONAN_PKG::libcurl)
