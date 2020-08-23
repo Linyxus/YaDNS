@@ -9,7 +9,7 @@
 #include <db/tree.h>
 #include <db/cache.h>
 #include <curl/curl.h>
-#include <argparse.h>
+#include <utils/argparse.h>
 #include <utils/logging.h>
 #include <network/query_pool.h>
 #include <network/conn_pool.h>

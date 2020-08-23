@@ -23,10 +23,10 @@ add_library(libdns_relay
         src/utils/err.c
         src/utils/queue.c
         src/utils/total_map.c
-        includes/argparse.h
+        includes/utils/argparse.h
         includes/utils/logging.h
         includes/network/query_pool.h
-        src/argparse.c
+        src/utils/argparse.c
         src/network/query_pool.c
         includes/network/conn_pool.h src/network/conn_pool.c src/db/io.c includes/db/tree.h src/db/tree.c includes/dns/compose.h src/dns/compose.c
         includes/db/cache.h src/db/cache.c includes/network/udp_pool.h src/network/udp_pool.c)
