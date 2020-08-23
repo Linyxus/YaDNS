@@ -6,12 +6,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <db/parse.h>
+#include <utils/logging.h>
+#include <utils/error.h>
 
 dn_db_record_t *db_read_all_records(char *path, int *count, int *ret_code) {
     FILE *handle;
     size_t file_len;
     char *buf;
     handle = fopen(path, "rb");
+    if (!handle) {
+        loge("can not open hosts file\n");
+        error("db cache init error");
+    }
     fseek(handle, 0, SEEK_END);
     file_len = ftell(handle);
 

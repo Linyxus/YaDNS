@@ -22,14 +22,14 @@
   (byte & 0x02 ? '1' : '0'), \
   (byte & 0x01 ? '1' : '0')
 
-void print_dns_msg(const char *data, uint32_t len) {
-    for (uint32_t i = 0; i < len; i++) {
-        printf(BYTE_TO_BINARY_PATTERN" ", BYTE_TO_BINARY(data[i]));
-        if (i % 2 == 1) {
-            putchar('\n');
-        }
-    }
-    putchar('\n');
-}
+//void print_dns_msg(const char *data, uint32_t len) {
+//    for (uint32_t i = 0; i < len; i++) {
+//        printf(BYTE_TO_BINARY_PATTERN" ", BYTE_TO_BINARY(data[i]));
+//        if (i % 2 == 1) {
+//            putchar('\n');
+//        }
+//    }
+//    putchar('\n');
+//}
 
 #endif //DNS_RELAY_LOGGING_H
