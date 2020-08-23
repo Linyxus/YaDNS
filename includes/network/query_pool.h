@@ -5,7 +5,7 @@
 #ifndef DNS_RELAY_QUERY_POOL_H
 #define DNS_RELAY_QUERY_POOL_H
 
-#include "socket.h"
+#include <sys/socket.h>
 #include "dns/parse.h"
 #include "utils/queue.h"
 

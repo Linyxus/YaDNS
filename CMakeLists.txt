@@ -17,9 +17,6 @@ add_library(libdns_relay
         includes/dns/utils.h
         src/dns/error.c
         src/dns/parse.c
-        includes/socket/server.h
-        includes/socket/types.h
-        src/socket/server.c
         includes/utils/error.h
         includes/utils/queue.h
         includes/utils/total_map.h
@@ -29,7 +26,6 @@ add_library(libdns_relay
         includes/argparse.h
         includes/utils/logging.h
         includes/network/query_pool.h
-        includes/socket.h
         src/argparse.c
         src/network/query_pool.c
         includes/network/conn_pool.h src/network/conn_pool.c src/db/io.c includes/db/tree.h src/db/tree.c includes/dns/compose.h src/dns/compose.c

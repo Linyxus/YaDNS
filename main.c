@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <socket.h>
+#include <sys/socket.h>
 #include <dns/parse.h>
 #include <dns/utils.h>
 #include <dns/compose.h>
