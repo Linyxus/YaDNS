@@ -53,3 +53,6 @@ dkms.conf
 
 # build output
 build/
+
+# ignore idea manifest
+.idea/
