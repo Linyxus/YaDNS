@@ -21,10 +21,12 @@ total_map_t tm_insert_int(total_map_t m, char *key, int val) {
 total_map_t tm_insert_str(total_map_t m, char *key, char *val) {
     total_map_t ret = (total_map_t) malloc(sizeof(total_map_node_t));
     ret->type = STR_TYPE;
-    ret->key = malloc(strlen(key));
+    ret->key = malloc(strlen(key) + 1);
     strcpy(ret->key, key);
-    ret->value = malloc(strlen(val));
+    ret->key[strlen(key)] = 0;
+    ret->value = malloc(strlen(val) + 1);
     strcpy(ret->value, val);
+    ((char *) ret->value)[strlen(val)] = 0;
     ret->next = m;
 
     return ret;

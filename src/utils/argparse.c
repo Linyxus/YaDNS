@@ -5,6 +5,7 @@
 #include "utils/argparse.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "utils/error.h"
 
 ap_t *ap_init() {
@@ -12,6 +13,7 @@ ap_t *ap_init() {
     ret->parsed = 0;
     ret->fields = 0;
     ret->results = 0;
+    ret->desc = 0;
 
     return ret;
 }
@@ -22,7 +24,7 @@ void ap_free(ap_t *ap) {
     free(ap);
 }
 
-void ap_add_argument(ap_t *ap, char *field_key, ap_field_type_t field_type, void *field_default) {
+void ap_add_argument(ap_t *ap, char *field_key, ap_field_type_t field_type, char *desc, void *field_default) {
     if (ap->parsed) {
         error("Can not add argument to a parsed ap handle; please create a new one.\n");
     }
@@ -47,6 +49,9 @@ void ap_add_argument(ap_t *ap, char *field_key, ap_field_type_t field_type, void
             ap->results = tm_insert_int(ap->results, field_key, 0);
         }
     }
+    if (desc) {
+        ap->desc = tm_insert_str(ap->desc, field_key, desc);
+    }
 }
 
 void ap_parse(ap_t *ap, int argc, const char **argv) {
@@ -54,6 +59,10 @@ void ap_parse(ap_t *ap, int argc, const char **argv) {
     char *name = 0;
     argc = argc - 1;
     argv = argv + 1;
+    if (argc == 1 && strcmp(*argv, "--help") == 0) {
+        ap_print_help(ap);
+        exit(0);
+    }
     while (p < argc) {
         name = argv[p];
         if (name[0] != '-' || name[1] != '-') {
@@ -145,5 +154,35 @@ double ap_get_double(ap_t *ap, char *field_key) {
         error("Get argument failed.");
     }
     return *tm_get_double(ap->results, field_key);
+}
+
+void print_field_help(char *field_name, int field_type, char *field_desc) {
+    printf("  --%s", field_name);
+    putchar(' ');
+    switch (field_type) {
+        case AP_STR:
+            printf("STR"); break;
+        case AP_INT:
+            printf("INT"); break;
+        case AP_DOUBLE:
+            printf("FLOAT"); break;
+        default: break;
+    }
+    puts("\n");
+    if (field_desc) {
+        printf("    %s\n\n", field_desc);
+    }
+}
+
+void ap_do_print_help(ap_t *ap, total_map_t field_list) {
+    if (!field_list) return;
+    ap_do_print_help(ap, field_list->next);
+    print_field_help(field_list->key, *(int *) field_list->value, tm_get_str(ap->desc, field_list->key));
+}
+
+void ap_print_help(ap_t *ap) {
+    printf("dns-relay -- Simple dns proxy, with DoH\n\n");
+    print_field_help("help", AP_STORE_TRUE, "Display this helper text.");
+    ap_do_print_help(ap, ap->fields);
 }
 

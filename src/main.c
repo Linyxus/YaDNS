@@ -7,24 +7,25 @@ static ap_t *ap = 0;
 static char cwd_buf[FILENAME_MAX];
 
 int main(int argc, const char **argv) {
-    logi("dns relay is starting");
     getcwd(cwd_buf, FILENAME_MAX);
     // parse arguments
     ap = ap_init();
-    ap_add_argument(ap, "server", AP_STR, "1.1.1.1");
-    ap_add_argument(ap, "doh_server", AP_STR, "cloudflare-dns.com");
-    ap_add_argument(ap, "doh_proxy", AP_STORE_TRUE, NULL);
+    ap_add_argument(ap, "server", AP_STR, "Raw remote DNS server address (default 1.1.1.1).", "1.1.1.1");
+    ap_add_argument(ap, "doh_server", AP_STR, "Remote DoH server address (default cloudflare-dns.com).", "cloudflare-dns.com");
+    ap_add_argument(ap, "doh_proxy", AP_STORE_TRUE, "Enable DoH proxy mode.", NULL);
     int max_query = 32;
-    ap_add_argument(ap, "max_query", AP_INT, &max_query);
+    ap_add_argument(ap, "max_query", AP_INT, "Max concurrent query numbers (default 32).", &max_query);
     int max_doh_conn = 32;
-    ap_add_argument(ap, "max_doh_conn", AP_INT, &max_doh_conn);
+    ap_add_argument(ap, "max_doh_conn", AP_INT, "Max concurrent DoH connection numbers (default 32).", &max_doh_conn);
     int max_udp_req = 32;
-    ap_add_argument(ap, "max_udp_req", AP_INT, &max_udp_req);
-    ap_add_argument(ap, "curl_verbose", AP_STORE_TRUE, NULL);
+    ap_add_argument(ap, "max_udp_req", AP_INT, "Max concurrent UDP request number (default 32).", &max_udp_req);
+    ap_add_argument(ap, "curl_verbose", AP_STORE_TRUE, "Enable verbose curl debug output.", NULL);
     int client_port = 2345;
-    ap_add_argument(ap, "client_port", AP_INT, &client_port);
-    ap_add_argument(ap, "hosts_path", AP_STR, "/Users/linyxus/dev/dns-relay/hosts.txt");
+    ap_add_argument(ap, "client_port", AP_INT, "Client UDP socket port for raw DNS request (default 2345).", &client_port);
+    ap_add_argument(ap, "hosts_path", AP_STR, "Path to hosts file.", "/Users/linyxus/dev/dns-relay/hosts.txt");
     ap_parse(ap, argc, argv);
+
+    logi("dns relay is starting");
 
     // print basic info
     if (ap_get_int(ap, "doh_proxy")) {
