@@ -1,5 +1,0 @@
-/Users/linyxus/dev/dns-relay/build/default/CMakeFiles/rebuild_cache.dir
-/Users/linyxus/dev/dns-relay/build/default/CMakeFiles/edit_cache.dir
-/Users/linyxus/dev/dns-relay/build/default/CMakeFiles/ctest.dir
-/Users/linyxus/dev/dns-relay/build/default/CMakeFiles/dns_relay.dir
-/Users/linyxus/dev/dns-relay/build/default/CMakeFiles/libdns_relay.dir
