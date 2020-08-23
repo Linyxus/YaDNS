@@ -1,0 +1,77 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "dns_relay",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ctest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ctest-Debug-9b96bcaa3bfcd1269b18.json",
+					"name" : "ctest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dns_relay::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dns_relay-Debug-192368959adb4e22b1de.json",
+					"name" : "dns_relay",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "libdns_relay::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-libdns_relay-Debug-9f0a71ce5995578d49c4.json",
+					"name" : "libdns_relay",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/linyxus/dev/dns-relay/build/default",
+		"source" : "/Users/linyxus/dev/dns-relay"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 0
+	}
+}

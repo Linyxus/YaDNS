@@ -1,0 +1,42 @@
+{
+ "graph_lock": {
+  "nodes": {
+   "0": {
+    "options": "libcurl:darwin_ssl=True\nlibcurl:fPIC=True\nlibcurl:shared=False\nlibcurl:with_brotli=False\nlibcurl:with_largemaxwritesize=False\nlibcurl:with_ldap=False\nlibcurl:with_libidn=False\nlibcurl:with_libmetalink=False\nlibcurl:with_libpsl=False\nlibcurl:with_librtmp=False\nlibcurl:with_libssh2=False\nlibcurl:with_nghttp2=False\nlibcurl:with_openssl=True\nlibcurl:with_wolfssl=False\nlibuv:fPIC=True\nlibuv:shared=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "requires": [
+     "1",
+     "2"
+    ],
+    "path": "../../conanfile.txt",
+    "context": "host"
+   },
+   "1": {
+    "ref": "libuv/1.38.1",
+    "options": "fPIC=True\nshared=False",
+    "package_id": "f74366f76f700cc6e991285892ad7a23c30e6d47",
+    "prev": "0",
+    "context": "host"
+   },
+   "2": {
+    "ref": "libcurl/7.71.1",
+    "options": "darwin_ssl=True\nfPIC=True\nshared=False\nwith_brotli=False\nwith_largemaxwritesize=False\nwith_ldap=False\nwith_libidn=False\nwith_libmetalink=False\nwith_libpsl=False\nwith_librtmp=False\nwith_libssh2=False\nwith_nghttp2=False\nwith_openssl=True\nwith_wolfssl=False\nzlib:fPIC=True\nzlib:minizip=False\nzlib:shared=False",
+    "package_id": "f0ad1460cbaa91f0dc19a5e1cc80ce7d7fd0756d",
+    "prev": "0",
+    "requires": [
+     "3"
+    ],
+    "context": "host"
+   },
+   "3": {
+    "ref": "zlib/1.2.11",
+    "options": "fPIC=True\nminizip=False\nshared=False",
+    "package_id": "f74366f76f700cc6e991285892ad7a23c30e6d47",
+    "prev": "0",
+    "context": "host"
+   }
+  },
+  "revisions_enabled": false
+ },
+ "version": "0.4",
+ "profile_host": "[settings]\narch=x86_64\narch_build=x86_64\nbuild_type=Release\ncompiler=apple-clang\ncompiler.libcxx=libc++\ncompiler.version=11.0\nos=Macos\nos_build=Macos\n[options]\n[build_requires]\n[env]\n"
+}

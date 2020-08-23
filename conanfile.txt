@@ -1,0 +1,6 @@
+[requires]
+libuv/1.38.1
+libcurl/7.71.1
+
+[generators]
+cmake
