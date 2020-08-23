@@ -39,7 +39,7 @@ target_include_directories(
 target_link_libraries(libdns_relay CONAN_PKG::libuv)
 target_link_libraries(libdns_relay CONAN_PKG::libcurl)
 
-add_executable(dns_relay main.c)
+add_executable(dns_relay src/main.c)
 
 include_directories(test/include)
 add_executable(ctest test/ctest.c test/src/cmocka.c)
