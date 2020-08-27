@@ -168,9 +168,8 @@ void print_field_help(char *field_name, int field_type, char *field_desc) {
             printf("FLOAT"); break;
         default: break;
     }
-    puts("\n");
     if (field_desc) {
-        printf("    %s\n\n", field_desc);
+        printf("\n    %s\n", field_desc);
     }
 }
 
@@ -181,7 +180,7 @@ void ap_do_print_help(ap_t *ap, total_map_t field_list) {
 }
 
 void ap_print_help(ap_t *ap) {
-    printf("dns-relay -- Simple dns proxy, with DoH\n\n");
+    printf("dns-relay -- Simple dns proxy, with DoH\n");
     print_field_help("help", AP_STORE_TRUE, "Display this helper text.");
     ap_do_print_help(ap, ap->fields);
 }
