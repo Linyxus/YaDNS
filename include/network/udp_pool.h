@@ -17,6 +17,7 @@ typedef struct {
     char send_buf[UDP_CONTEXT_BUF_SIZE];
     size_t send_len;
     char valid;
+    void *timer;
 } udp_context_t;
 
 typedef struct {

@@ -2,8 +2,9 @@
 // Created by Yichen Xu on 2020/8/19.
 //
 
-#include "network/conn_pool.h"
-#include "time.h"
+#include <network/conn_pool.h>
+#include <string.h>
+#include <time.h>
 
 CURL *setup_handle(conn_context_t *c, char *doh_server) {
     CURL *easy_handle = curl_easy_init();
@@ -23,6 +24,8 @@ conn_context_t *make_ctxt(char *doh_server) {
     c->nread = 0;
     c->query_id = 0;
     c->easy_handle = setup_handle(c, doh_server);
+    c->timeout_timer = 0;
+    c->retry_count = 0;
 
     return c;
 }
@@ -61,6 +64,7 @@ conn_context_t *cpool_add_conn(conn_pool_t *pool, int q_id, query_t *q) {
     memcpy(c->send_buf, q->msg, q->msg_len);
     c->send_len = q->msg_len;
     set_dns_id(c->send_buf, c->dns_id);
+    c->retry_count = 0;
 
     return c;
 }

@@ -9,6 +9,8 @@
 #include <uv.h>
 #include <utils/argparse.h>
 
+#define DOH_HTTPS_TIMEOUT 8000
+
 void add_doh_connection(struct sockaddr addr, char *req_data, size_t req_len);
 
 void curl_init(ap_t *args);

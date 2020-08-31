@@ -20,6 +20,8 @@ typedef struct {
     size_t nread;
     uint16_t dns_id;
     int conn_id;
+    void *timeout_timer;
+    int retry_count;
 } conn_context_t;
 
 typedef struct {

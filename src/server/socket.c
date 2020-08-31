@@ -64,11 +64,17 @@ static void on_cli_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
         udp_context_t *c = upool->pool[u_id];
         set_dns_id(buf->base, qpool->pool[c->query_id].dns_id);
 
+        uv_timer_t *timer = c->timer;
+        uv_timer_stop(timer);
+        free(timer->data);
+        free(timer);
+
         // send to client
         uv_udp_send_t *send_req = malloc(sizeof(uv_udp_send_t));
         uv_buf_t send_buf = uv_buf_init(buf->base, nread);
         uv_udp_send(send_req, srv_sock, &send_buf, 1, &qpool->pool[c->query_id].addr, on_send);
         upool_finish(upool, u_id);
+        qpool_remove(qpool, c->query_id);
 
         free(buf->base);
     }
@@ -93,6 +99,17 @@ static dn_db_name_t *db_name_from_dns_name(dn_name_t *dns_name, char *raw) {
     return name;
 }
 
+static void on_udp_timeout(uv_timer_t *timer) {
+    logw("udp %d timeout, delete req", *(int *)timer->data);
+    int u_id = *(int *) timer->data;
+    uv_timer_stop(timer);
+    free(timer->data);
+    free(timer);
+    udp_context_t *c = upool->pool[u_id];
+    upool_finish(upool, u_id);
+    qpool_remove(qpool, c->query_id);
+}
+
 static void add_udp_req(struct sockaddr addr, char *req_data, size_t req_len) {
     // check whether pool is full
     if (qpool_full(qpool)) {
@@ -106,6 +123,15 @@ static void add_udp_req(struct sockaddr addr, char *req_data, size_t req_len) {
     int q_id = qpool_insert(qpool, addr, req_data, req_len);
     // get udp context id
     int u_id = upool_add(upool, q_id, qpool->pool + q_id);
+
+    uv_timer_t *timer = malloc(sizeof(uv_timer_t));
+    uv_timer_init(loop, timer);
+    int *p_uid = malloc(sizeof(int));
+    *p_uid = u_id;
+    timer->data = p_uid;
+    uv_timer_start(timer, on_udp_timeout, UDP_TIMEOUT, UDP_TIMEOUT);
+
+    upool->pool[u_id]->timer = timer;
 
     uv_udp_send_t *send_req = malloc(sizeof(uv_udp_send_t));
     uv_buf_t send_buf = uv_buf_init(upool->pool[u_id]->send_buf, upool->pool[u_id]->send_len);
