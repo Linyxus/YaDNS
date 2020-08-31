@@ -53,6 +53,16 @@ static size_t handle_data(char *buf, size_t size, size_t nmemb, void *userdata) 
     return realsize;
 }
 
+void on_conn_timeout(uv_timer_t *timer) {
+    conn_context_t *conn = timer->data;
+    logw("doh conn %d timeout, delete conn", conn->conn_id);
+    uv_timer_stop(timer);
+    curl_multi_remove_handle(curl_handle, conn->easy_handle);
+    qpool_remove(qpool, conn->query_id);
+    cpool_finish(cpool, conn->conn_id);
+    free(timer);
+}
+
 void add_doh_connection(struct sockaddr addr, char *req_data, size_t req_len) {
     // add to query pool
     if (qpool_full(qpool)) {
@@ -88,6 +98,13 @@ void add_doh_connection(struct sockaddr addr, char *req_data, size_t req_len) {
     // verbose
     curl_easy_setopt(easy_handle, CURLOPT_VERBOSE, ap_get_int(ap, "curl_verbose"));
 
+    // add timeout
+    uv_timer_t *timer = malloc(sizeof(uv_timer_t));
+    uv_timer_init(loop, timer);
+    timer->data = conn;
+    uv_timer_start(timer, on_conn_timeout, DOH_HTTPS_TIMEOUT, DOH_HTTPS_TIMEOUT);
+    conn->timeout_timer = timer;
+
     curl_multi_add_handle(curl_handle, easy_handle);
 }
 
@@ -114,7 +131,7 @@ static void check_multi_info(void)
                 c_id = context->conn_id;
 
                 curl_multi_remove_handle(curl_handle, easy_handle);
-                curl_easy_cleanup(easy_handle);
+//                curl_easy_cleanup(easy_handle);
                 if (context->nread) {
                     logi("receive response from doh server, length %ld", context->nread);
                     // change dns message id
@@ -123,6 +140,9 @@ static void check_multi_info(void)
                     uv_buf_t send_buf = uv_buf_init(context->read_buf, context->nread);
                     uv_udp_send(send_req, srv_sock, &send_buf, 1, &qpool->pool[context->query_id].addr, on_send);
                 }
+                uv_timer_t *timer = context->timeout_timer;
+                uv_timer_stop(timer);
+                free(timer);
                 qpool_remove(qpool, q_id);
                 cpool_finish(cpool, c_id);
                 break;
