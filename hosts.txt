@@ -211,7 +211,7 @@
 69.43.161.167 www.x.com.cn
 199.255.240.88 www.z.com.cn
 60.222.224.141 www.bupt.com.cn
-60.222.224.141 www.pku.edu.cn 
+60.222.224.141 www.pku.edu.cn
 
 
 64.233.168.84 accounts.google.com
