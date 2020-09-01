@@ -56,3 +56,5 @@ build/
 
 # ignore idea manifest
 .idea/
+
+**/__pycache__/
