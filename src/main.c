@@ -12,7 +12,8 @@ int main(int argc, const char **argv) {
     ap = ap_init();
     ap_add_argument(ap, "server", AP_STR, "Raw remote DNS server address (default 1.1.1.1).", "1.1.1.1");
     ap_add_argument(ap, "doh_server", AP_STR, "Remote DoH server address (default cloudflare-dns.com).", "cloudflare-dns.com");
-    ap_add_argument(ap, "doh_proxy", AP_STORE_TRUE, "Enable DoH proxy mode.", NULL);
+    int doh_proxy = 0;
+    ap_add_argument(ap, "doh_proxy", AP_STORE_TRUE, "Enable DoH proxy mode.", &doh_proxy);
     int max_query = 32;
     ap_add_argument(ap, "max_query", AP_INT, "Max concurrent query number (default 32).", &max_query);
     int max_doh_conn = 32;

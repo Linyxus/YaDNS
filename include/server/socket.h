@@ -8,7 +8,7 @@
 #include <uv.h>
 #include <utils/argparse.h>
 
-#define UDP_TIMEOUT 1000
+#define UDP_TIMEOUT 8000
 
 extern uv_udp_t *srv_sock, *cli_sock;
 
