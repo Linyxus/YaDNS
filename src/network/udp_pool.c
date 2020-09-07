@@ -4,6 +4,7 @@
 
 #include <network/udp_pool.h>
 #include <time.h>
+#include <string.h>
 
 udp_pool_t *upool_init(size_t size) {
     udp_pool_t *pool = malloc(sizeof(udp_pool_t));

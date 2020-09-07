@@ -7,6 +7,7 @@
 
 #include <sys/socket.h>
 #include "dns/parse.h"
+#include <db/types.h>
 #include "utils/queue.h"
 
 typedef struct {
@@ -14,6 +15,7 @@ typedef struct {
     char *msg;
     size_t msg_len;
     uint16_t dns_id;
+    dn_db_name_t *dns_dn_name;
 } query_t;
 
 typedef struct {
@@ -26,7 +28,7 @@ query_pool_t *qpool_init(size_t pool_size);
 
 int qpool_full(query_pool_t *pool);
 
-int qpool_insert(query_pool_t *pool, struct sockaddr addr, char *msg, size_t msg_len);
+int qpool_insert(query_pool_t *pool, struct sockaddr addr, char *msg, size_t msg_len, dn_db_name_t *dn_name);
 
 void qpool_remove(query_pool_t *pool, size_t idx);
 

@@ -3,6 +3,7 @@
 //
 
 #include "network/query_pool.h"
+#include <string.h>
 
 query_pool_t *qpool_init(size_t pool_size) {
     query_pool_t *pool = malloc(sizeof(query_pool_t));
@@ -20,7 +21,7 @@ int qpool_full(query_pool_t *pool) {
     return q_empty(pool->idx_queue);
 }
 
-int qpool_insert(query_pool_t *pool, struct sockaddr addr, char *msg, size_t msg_len) {
+int qpool_insert(query_pool_t *pool, struct sockaddr addr, char *msg, size_t msg_len, dn_db_name_t *dn_name) {
     assert(!qpool_full(pool));
     size_t idx = q_deq(pool->idx_queue);
     pool->pool[idx].addr = addr;
@@ -28,6 +29,7 @@ int qpool_insert(query_pool_t *pool, struct sockaddr addr, char *msg, size_t msg
     memcpy(pool->pool[idx].msg, msg, msg_len);
     pool->pool[idx].msg_len = msg_len;
     pool->pool[idx].dns_id = get_dns_id(msg);
+    pool->pool[idx].dns_dn_name = dn_name;
     return idx;
 }
 
@@ -35,6 +37,10 @@ void qpool_remove(query_pool_t *pool, size_t idx) {
     assert(!q_in(pool->idx_queue, idx));
     if (pool->pool[idx].msg) {
         free(pool->pool[idx].msg);
+    }
+    if (pool->pool[idx].dns_dn_name) {
+        // destroy name when removing the handle
+        destroy_name(pool->pool[idx].dns_dn_name);
     }
     q_enq(pool->idx_queue, idx);
 }

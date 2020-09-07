@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-uint16_t hash_name(dn_db_name_t *name) {
+uint8_t hash_name(dn_db_name_t *name) {
     if (!name) return 0;
     char *s = name->label.label;
-    uint16_t res = 0;
+    uint8_t res = 0;
     for (size_t i = 0; i < name->label.len; i++) {
         res += res * 31 + name->label.label[i];
     }

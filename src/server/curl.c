@@ -63,7 +63,7 @@ void on_conn_timeout(uv_timer_t *timer) {
     free(timer);
 }
 
-void add_doh_connection(struct sockaddr addr, char *req_data, size_t req_len) {
+void add_doh_connection(struct sockaddr addr, char *req_data, size_t req_len, dn_db_name_t *name) {
     // add to query pool
     if (qpool_full(qpool)) {
         logw("ignore dns request due to full query pool.");
@@ -73,7 +73,7 @@ void add_doh_connection(struct sockaddr addr, char *req_data, size_t req_len) {
         logw("ignore dns request due to full doh conn pool.");
         return;
     }
-    int q_id = qpool_insert(qpool, addr, req_data, req_len);
+    int q_id = qpool_insert(qpool, addr, req_data, req_len, name);
     // get curl handle
     conn_context_t *conn = cpool_add_conn(cpool, q_id, qpool->pool + q_id);
 

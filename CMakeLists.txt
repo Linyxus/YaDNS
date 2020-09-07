@@ -29,7 +29,7 @@ add_library(libdns_relay
         src/utils/argparse.c
         src/network/query_pool.c
         include/network/conn_pool.h src/network/conn_pool.c src/db/io.c include/db/tree.h src/db/tree.c include/dns/compose.h src/dns/compose.c
-        include/db/cache.h src/db/cache.c include/network/udp_pool.h src/network/udp_pool.c include/server/pools.h src/server/pools.c include/server/loop.h src/server/loop.c include/server/socket.h src/server/socket.c include/server/db_cache.h src/server/db_cache.c include/server/curl.h src/server/curl.c include/server/dns_server.h src/server/dns_server.c)
+        include/db/cache.h src/db/cache.c include/network/udp_pool.h src/network/udp_pool.c include/server/pools.h src/server/pools.c include/server/loop.h src/server/loop.c include/server/socket.h src/server/socket.c include/server/db_cache.h src/server/db_cache.c include/server/curl.h src/server/curl.c include/server/dns_server.h src/server/dns_server.c include/utils/trie.h src/utils/trie.c)
 
 target_include_directories(
         libdns_relay
