@@ -10,6 +10,7 @@
 #include <db/parse.h>
 #include <utils/queue.h>
 #include <string.h>
+#include <utils/trie.h>
 
 void test_always_success(void **state) {
     // This test will always pass
@@ -262,6 +263,28 @@ void test_queue_in_0(void **state) {
     assert_false(q_in(q, 1));
 }
 
+void test_trie_init(void **state) {
+    trie t = trie_init();
+    assert_non_null(t);
+}
+
+void test_trie_works(void **state) {
+    trie t = trie_init();
+    char s1[] = "test the trie!";
+    trie n1 = trie_insert(t, s1, s1);
+    assert_ptr_equal(s1, trie_lookup(t, s1));
+    trie n2 = trie_insert(t, s1, s1);
+    assert_ptr_equal(s1, trie_lookup(t, s1));
+    assert_ptr_equal(n1, n2);
+
+    char s2[] = "test again";
+    char s3[] = "test again and again";
+    trie_insert(t, s2, s2);
+    trie_insert(t, s3, s3);
+    assert_ptr_equal(s2, trie_lookup(t, s2));
+    assert_ptr_equal(s3, trie_lookup(t, s3));
+}
+
 int setup(void **state) {
     return 0;
 }
@@ -292,6 +315,8 @@ int main(void) {
         cmocka_unit_test(test_queue_full),
         cmocka_unit_test(test_queue_ok),
         cmocka_unit_test(test_queue_in_0),
+        cmocka_unit_test(test_trie_init),
+        cmocka_unit_test(test_trie_works),
     };
 
     int count_fail_tests = cmocka_run_group_tests(tests, setup, teardown);
