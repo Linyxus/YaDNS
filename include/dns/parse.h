@@ -18,12 +18,16 @@
 #define DNS_MSG_PARSE_Q_OKAY 0
 #define DNS_MSG_PARSE_Q_INVALID 1
 
+#define DNS_MSG_PARSE_RR_OKAY 0
+#define DNS_MSG_PARSE_RR_INVALID 1
+
 #define DNS_MSG_PARSE_OKAY 0
 #define DNS_MSG_PARSE_INVALID 1
 
 char *parse_header(char *msg, dns_msg_header_t *header);
 char *parse_name(char *current, char *orig_msg, dn_name_t *name, int *ret_code);
 char *parse_question(char *current, char *orig_msg, dns_msg_q_t *q, int *ret_code);
+char *parse_rr(char *current, char *orig_msg, dns_msg_rr_t *rr, int *ret_code);
 int parse_dns_msg(char *msg, dns_msg_t *res);
 
 uint16_t get_dns_id(char *msg);

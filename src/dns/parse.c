@@ -122,7 +122,50 @@ int parse_dns_msg(char *msg, dns_msg_t *res) {
             return DNS_MSG_PARSE_INVALID;
         }
     }
+    for (dns_size_t i = 0; i < res->header.an_cnt; i++) {
+        int pr_code = DNS_MSG_PARSE_RR_OKAY;
+        p = parse_rr(p, msg, res->answer + i, &pr_code);
+        if (pr_code == DNS_MSG_PARSE_RR_INVALID) {
+            return DNS_MSG_PARSE_INVALID;
+        }
+    }
+    for (dns_size_t i = 0; i < res->header.ns_cnt; i++) {
+        int pr_code = DNS_MSG_PARSE_RR_OKAY;
+        p = parse_rr(p, msg, res->authority + i, &pr_code);
+        if (pr_code == DNS_MSG_PARSE_RR_INVALID) {
+            return DNS_MSG_PARSE_INVALID;
+        }
+    }
+    for (dns_size_t i = 0; i < res->header.ar_cnt; i++) {
+        int pr_code = DNS_MSG_PARSE_RR_OKAY;
+        p = parse_rr(p, msg, res->additional + i, &pr_code);
+        if (pr_code == DNS_MSG_PARSE_RR_INVALID) {
+            return DNS_MSG_PARSE_INVALID;
+        }
+    }
     res->msg_len = p - msg;
 
     return DNS_MSG_PARSE_OKAY;
+}
+
+char *parse_rr(char *current, char *orig_msg, dns_msg_rr_t *rr, int *ret_code) {
+    char *p = current;
+    int code = 0;
+    p = parse_name(p, orig_msg, &rr->name, &code);
+    if (code == DNS_MSG_PARSE_Q_INVALID) {
+        *ret_code = DNS_MSG_PARSE_RR_INVALID;
+        return 0;
+    }
+    rr->type = ntohs(*(uint16_t *) p);
+    p += 2;
+    rr->class = ntohs(*(uint16_t *) p);
+    p += 2;
+    rr->ttl = ntohl(*(uint16_t *) p);
+    p += 4;
+    rr->rdlength = ntohs(*(uint16_t *) p);
+    p += 2;
+    rr->data_offset = p - orig_msg;
+    p += rr->rdlength;
+    *ret_code = DNS_MSG_PARSE_RR_OKAY;
+    return p;
 }
