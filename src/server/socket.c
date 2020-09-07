@@ -110,7 +110,7 @@ static void on_udp_timeout(uv_timer_t *timer) {
     qpool_remove(qpool, c->query_id);
 }
 
-static void add_udp_req(struct sockaddr addr, char *req_data, size_t req_len) {
+static void add_udp_req(struct sockaddr addr, char *req_data, size_t req_len, dn_db_name_t *dn_name) {
     // check whether pool is full
     if (qpool_full(qpool)) {
         logw("ignore dns request due to full query pool.");
@@ -120,7 +120,7 @@ static void add_udp_req(struct sockaddr addr, char *req_data, size_t req_len) {
         logw("ignore dns request due to full udp req pool.");
         return;
     }
-    int q_id = qpool_insert(qpool, addr, req_data, req_len);
+    int q_id = qpool_insert(qpool, addr, req_data, req_len, dn_name);
     // get udp context id
     int u_id = upool_add(upool, q_id, qpool->pool + q_id);
 
@@ -165,10 +165,11 @@ static void on_srv_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
         printf("\n");
 
         int hit = 0;
+        dn_db_name_t *name = 0;
+        dn_db_record_t *rec = 0;
         if (parsed_msg.header.qd_cnt == 1 && parsed_msg.question[0].type == DNS_QTYPE_A) {
             // hosts lookup
-            dn_db_name_t *name = db_name_from_dns_name(&parsed_msg.question[0].name, parsed_msg.raw);
-            dn_db_record_t *rec = 0;
+            name = db_name_from_dns_name(&parsed_msg.question[0].name, parsed_msg.raw);
             rec = cache_lookup(db_cache, name);
             if (!rec) {
                 logi("hosts cache miss");
@@ -200,16 +201,16 @@ static void on_srv_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
                     free(reply);
                 }
             }
-            destroy_name(name);
+            // destroy_name(name); // do not destroy name right now. Saved for further use
         }
 
         // relay to dns server
         if (!hit && ap_get_int(ap, "doh_proxy")) {
             logi("request handler: doh server %s", ap_get_str(ap, "doh_server"));
-            add_doh_connection(*addr, buf->base, nread);
+            add_doh_connection(*addr, buf->base, nread, name);
         } else if (!hit) {
             logi("request handler: raw server %s", ap_get_str(ap, "server"));
-            add_udp_req(*addr, buf->base, nread);
+            add_udp_req(*addr, buf->base, nread, name);
         }
 
         free(buf->base);
