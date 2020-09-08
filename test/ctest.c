@@ -285,6 +285,22 @@ void test_trie_works(void **state) {
     assert_ptr_equal(s3, trie_lookup(t, s3));
 }
 
+void test_trie_gc_works(void **state) {
+    trie t = trie_init();
+    char s1[] = "abc";
+    char s2[] = "abcd";
+    trie_insert(t, s1, s1);
+    assert_false(trie_empty_tree(t));
+    trie_insert(t, s2, s2);
+    assert_false(trie_empty_tree(t));
+    trie_insert(t, s2, 0);
+    assert_false(trie_empty_tree(t));
+    trie_insert(t, s1, 0);
+    assert_true(trie_empty_tree(t));
+    trie_collect_garbage(t);
+    assert_int_equal(t->num_child, 0);
+}
+
 int setup(void **state) {
     return 0;
 }
@@ -317,6 +333,7 @@ int main(void) {
         cmocka_unit_test(test_queue_in_0),
         cmocka_unit_test(test_trie_init),
         cmocka_unit_test(test_trie_works),
+        cmocka_unit_test(test_trie_gc_works),
     };
 
     int count_fail_tests = cmocka_run_group_tests(tests, setup, teardown);

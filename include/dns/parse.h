@@ -11,6 +11,7 @@
 #define DN_PARSE_LABEL_OKAY 0
 #define DN_PARSE_LABEL_INVALID_LEN 1
 #define DN_PARSE_LABEL_EON 2
+#define DN_PARSE_LABEL_OKAY_PTR 3
 
 #define DN_PARSE_NAME_OKAY 0
 #define DN_PARSE_NAME_INVALID 1
@@ -25,7 +26,7 @@
 #define DNS_MSG_PARSE_INVALID 1
 
 char *parse_header(char *msg, dns_msg_header_t *header);
-char *parse_name(char *current, char *orig_msg, dn_name_t *name, int *ret_code);
+char *parse_name(char *current, char *orig_msg, dn_label_t *label, dns_size_t *name_len, int *ret_code);
 char *parse_question(char *current, char *orig_msg, dns_msg_q_t *q, int *ret_code);
 char *parse_rr(char *current, char *orig_msg, dns_msg_rr_t *rr, int *ret_code);
 int parse_dns_msg(char *msg, dns_msg_t *res);

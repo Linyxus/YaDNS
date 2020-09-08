@@ -6,8 +6,11 @@
 #include <server/pools.h>
 #include <server/loop.h>
 #include <server/socket.h>
+#include <server/db_cache.h>
 #include <utils/logging.h>
 #include <utils/error.h>
+#include <dns/print.h>
+#include <ctype.h>
 
 static CURLM *curl_handle = 0;
 static uv_timer_t timeout;
@@ -108,6 +111,25 @@ void add_doh_connection(struct sockaddr addr, char *req_data, size_t req_len, dn
     curl_multi_add_handle(curl_handle, easy_handle);
 }
 
+static dn_db_name_t *db_name_from_dns_name(dn_name_t *dns_name, char *raw) {
+    dn_db_name_t *name = 0;
+    for (size_t i = 0; i < dns_name->len; i++) {
+        dn_db_name_t *u = malloc(sizeof(dn_db_name_t));
+        u->label.len = dns_name->labels[i].len;
+        u->label.label = malloc(sizeof(char) * (u->label.len + 1));
+        memcpy(u->label.label, raw + dns_name->labels[i].offset, u->label.len);
+        // convert to lower case
+        for (size_t j = 0; j < u->label.len; j++) {
+            u->label.label[j] = tolower(u->label.label[j]);
+        }
+        u->label.label[u->label.len] = '\0';
+        u->next = name;
+        name = u;
+    }
+
+    return name;
+}
+
 static void check_multi_info(void)
 {
     char *done_url;
@@ -138,6 +160,39 @@ static void check_multi_info(void)
                     uv_udp_send_t *send_req = malloc(sizeof(uv_udp_send_t));
                     uv_buf_t send_buf = uv_buf_init(context->read_buf, context->nread);
                     uv_udp_send(send_req, srv_sock, &send_buf, 1, &qpool->pool[context->query_id].addr, on_send);
+
+                    // parse the message
+                    dns_msg_t msg;
+                    int ret_code = parse_dns_msg(context->read_buf, &msg);
+                    memcpy(msg.raw, context->read_buf, msg.msg_len);
+                    if (ret_code != DNS_MSG_PARSE_OKAY) {
+                        loge("fail to parse dns message");
+                    } else {
+                        print_dns_msg(&msg);
+
+                        for (int i = 0; i < msg.header.an_cnt; i++) {
+                            dns_msg_rr_t *rr = msg.answer + i;
+                            if (rr->type == 1) {
+                                dn_db_name_t *name = db_name_from_dns_name(&rr->name, msg.raw);
+                                db_ip_t ip = ntohl(*(uint32_t *) (rr->data_offset + msg.raw));
+                                uint32_t ttl = rr->ttl;
+//                    uint32_t ttl = 120;
+
+                                lc_insert(db_lru_cache, name, ip, ttl);
+                            }
+                        }
+
+                        for (int i = 0; i < msg.header.ns_cnt; i++) {
+                            dns_msg_rr_t *rr = msg.authority + i;
+                            if (rr->type == 1) {
+                                dn_db_name_t *name = db_name_from_dns_name(&rr->name, msg.raw);
+                                db_ip_t ip = ntohl(*(uint32_t *) (rr->data_offset + msg.raw));
+                                uint32_t ttl = rr->ttl;
+
+                                lc_insert(db_lru_cache, name, ip, ttl);
+                            }
+                        }
+                    }
                 }
                 uv_timer_t *timer = context->timeout_timer;
                 uv_timer_stop(timer);

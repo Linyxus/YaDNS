@@ -8,8 +8,10 @@
 #include <server/db_cache.h>
 #include <server/curl.h>
 #include <db/io.h>
+#include <db/lru_cache.h>
 #include <dns/utils.h>
 #include <dns/compose.h>
+#include <dns/print.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <utils/logging.h>
@@ -31,6 +33,26 @@ void on_send(uv_udp_send_t* handle, int status) {
         printf("uv_udp_send_cb error: %s\n", uv_strerror(status));
     }
 }
+
+static dn_db_name_t *db_name_from_dns_name(dn_name_t *dns_name, char *raw) {
+    dn_db_name_t *name = 0;
+    for (size_t i = 0; i < dns_name->len; i++) {
+        dn_db_name_t *u = malloc(sizeof(dn_db_name_t));
+        u->label.len = dns_name->labels[i].len;
+        u->label.label = malloc(sizeof(char) * (u->label.len + 1));
+        memcpy(u->label.label, raw + dns_name->labels[i].offset, u->label.len);
+        // convert to lower case
+        for (size_t j = 0; j < u->label.len; j++) {
+            u->label.label[j] = tolower(u->label.label[j]);
+        }
+        u->label.label[u->label.len] = '\0';
+        u->next = name;
+        name = u;
+    }
+
+    return name;
+}
+
 
 static void on_cli_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
                         const struct sockaddr *addr, unsigned flags) {
@@ -76,27 +98,41 @@ static void on_cli_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
         upool_finish(upool, u_id);
         qpool_remove(qpool, c->query_id);
 
+        // parse the buffer
+        dns_msg_t msg;
+        int ret_code = parse_dns_msg(buf->base, &msg);
+        memcpy(msg.raw, buf->base, msg.msg_len);
+        if (ret_code != DNS_MSG_PARSE_OKAY) {
+            loge("fail to parse dns message");
+        } else {
+            print_dns_msg(&msg);
+
+            for (int i = 0; i < msg.header.an_cnt; i++) {
+                dns_msg_rr_t *rr = msg.answer + i;
+                if (rr->type == 1) {
+                    dn_db_name_t *name = db_name_from_dns_name(&rr->name, msg.raw);
+                    db_ip_t ip = ntohl(*(uint32_t *) (rr->data_offset + msg.raw));
+                    uint32_t ttl = rr->ttl;
+//                    uint32_t ttl = 120;
+
+                    lc_insert(db_lru_cache, name, ip, ttl);
+                }
+            }
+
+            for (int i = 0; i < msg.header.ns_cnt; i++) {
+                dns_msg_rr_t *rr = msg.authority + i;
+                if (rr->type == 1) {
+                    dn_db_name_t *name = db_name_from_dns_name(&rr->name, msg.raw);
+                    db_ip_t ip = ntohl(*(uint32_t *) (rr->data_offset + msg.raw));
+                    uint32_t ttl = rr->ttl;
+
+                    lc_insert(db_lru_cache, name, ip, ttl);
+                }
+            }
+        }
+
         free(buf->base);
     }
-}
-
-static dn_db_name_t *db_name_from_dns_name(dn_name_t *dns_name, char *raw) {
-    dn_db_name_t *name = 0;
-    for (size_t i = 0; i < dns_name->len; i++) {
-        dn_db_name_t *u = malloc(sizeof(dn_db_name_t));
-        u->label.len = dns_name->labels[i].len;
-        u->label.label = malloc(sizeof(char) * (u->label.len + 1));
-        memcpy(u->label.label, raw + dns_name->labels[i].offset, u->label.len);
-        // convert to lower case
-        for (size_t j = 0; j < u->label.len; j++) {
-            u->label.label[j] = tolower(u->label.label[j]);
-        }
-        u->label.label[u->label.len] = '\0';
-        u->next = name;
-        name = u;
-    }
-
-    return name;
 }
 
 static void on_udp_timeout(uv_timer_t *timer) {
@@ -160,13 +196,12 @@ static void on_srv_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
             loge("Error parsing dns message");
         }
         logi("DNS message id %d, qcount %d", parsed_msg.header.id, parsed_msg.header.qd_cnt);
-        printf("          ");
-        print_question(parsed_msg.question, parsed_msg.raw);
-        printf("\n");
+        print_dns_msg(&parsed_msg);
 
         int hit = 0;
         dn_db_name_t *name = 0;
         dn_db_record_t *rec = 0;
+        // first check hosts cache
         if (parsed_msg.header.qd_cnt == 1 && parsed_msg.question[0].type == DNS_QTYPE_A) {
             // hosts lookup
             name = db_name_from_dns_name(&parsed_msg.question[0].name, parsed_msg.raw);
@@ -202,6 +237,27 @@ static void on_srv_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
                 }
             }
             // destroy_name(name); // do not destroy name right now. Saved for further use
+        }
+        // then check lru cache
+        if (parsed_msg.header.qd_cnt == 1 && parsed_msg.question[0].type == DNS_QTYPE_A) {
+            name = db_name_from_dns_name(&parsed_msg.question[0].name, parsed_msg.raw);
+            db_ip_t ip = lc_lookup(db_lru_cache, name);
+            if (ip) {
+                logi("request handler: local lru cache");
+                char *rr;
+                char *reply;
+                hit = 1;
+                // compose rr record
+                size_t rr_len;
+                rr = compose_a_rr(&parsed_msg.question[0].name, ip, &rr_len);
+                size_t reply_len;
+                reply = compose_a_rr_ans(parsed_msg.raw, parsed_msg.msg_len, rr, rr_len, &reply_len);
+                uv_udp_send_t *send_req = malloc(sizeof(uv_udp_send_t));
+                uv_buf_t send_buf = uv_buf_init(reply, reply_len);
+                uv_udp_send(send_req, srv_sock, &send_buf, 1, addr, on_send);
+                free(rr);
+                free(reply);
+            }
         }
 
         // relay to dns server

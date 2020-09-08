@@ -12,7 +12,7 @@ int main(int argc, const char **argv) {
     ap = ap_init();
     ap_add_argument(ap, "server", AP_STR, "Raw remote DNS server address (default 1.1.1.1).", "1.1.1.1");
     ap_add_argument(ap, "doh_server", AP_STR, "Remote DoH server address (default cloudflare-dns.com).", "cloudflare-dns.com");
-    int doh_proxy = 0;
+    int doh_proxy = 1;
     ap_add_argument(ap, "doh_proxy", AP_STORE_TRUE, "Enable DoH proxy mode.", &doh_proxy);
     int max_query = 32;
     ap_add_argument(ap, "max_query", AP_INT, "Max concurrent query number (default 32).", &max_query);
@@ -24,7 +24,11 @@ int main(int argc, const char **argv) {
     int client_port = 2345;
     ap_add_argument(ap, "client_port", AP_INT, "Client UDP socket port for raw DNS request (default 2345).", &client_port);
     ap_add_argument(ap, "hosts_path", AP_STR, "Path to hosts file.", "/Users/linyxus/dev/dns-relay/hosts.txt");
+    int mask = 0xf;
+    ap_add_argument(ap, "logging", AP_INT, "Logging mask for controlling output verbosity (default 15).", &mask);
     ap_parse(ap, argc, argv);
+
+    logging_init(ap_get_int(ap, "logging"));
 
     logi("dns relay is starting");
 

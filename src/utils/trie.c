@@ -50,3 +50,33 @@ trie trie_insert(trie t, char *key, void *val) {
     t->children[t->num_child++] = u;
     return trie_insert(u, key + 1, val);
 }
+
+char trie_empty_tree(trie t) {
+    if (!t) return 1;
+    if (t->val) return 0;
+    for (int i = 0; i < t->num_child; i++) {
+        if (!trie_empty_tree(t->children[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+char trie_collect_garbage(trie t) {
+    if (!t) return 1;
+    if (t->key && trie_empty_tree(t)) {
+        trie_deinit(t);
+        return 1;
+    }
+    trie new_children[TRIE_TREE_MAX_LEAF];
+    int n = 0;
+    for (int i = 0; i < t->num_child; i++) {
+        if (!trie_collect_garbage(t->children[i])) {
+            t->children[n] = t->children[i];
+            n += 1;
+        }
+    }
+    t->num_child = n;
+
+    return 0;
+}

@@ -9,6 +9,7 @@
 
 tree_t *db_tree = 0;
 cache_t *db_cache = 0;
+trie db_lru_cache = 0;
 static dn_db_record_t *db_rec = 0;
 
 void db_cache_init(ap_t *ap) {
@@ -21,6 +22,7 @@ void db_cache_init(ap_t *ap) {
     }
     db_tree = tree_build_from_rec(db_rec, count);
     db_cache = cache_init();
+    db_lru_cache = lc_init();
 }
 
 void db_cache_deinit() {

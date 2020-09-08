@@ -7,9 +7,14 @@
 
 #include <stdio.h>
 
-#define logi(args...) fprintf(stdout, "[    info ] "); fprintf(stdout, args); fprintf(stdout, "\n")
-#define logw(args...) fprintf(stdout, "[ warning ] "); fprintf(stdout, args); fprintf(stdout, "\n")
-#define loge(args...) fprintf(stderr, "[   error ] "); fprintf(stderr, args); fprintf(stdout, "\n")
+extern char _logging_mask;
+
+void logging_init(char mask);
+
+#define logd(args...) if (_logging_mask & 0x1) {fprintf(stdout, "[   debug ] "); fprintf(stderr, args); fprintf(stdout, "\n");}
+#define logw(args...) if (_logging_mask & 0x2) {fprintf(stdout, "[ warning ] "); fprintf(stdout, args); fprintf(stdout, "\n");}
+#define loge(args...) if (_logging_mask & 0x4) {fprintf(stderr, "[   error ] "); fprintf(stderr, args); fprintf(stdout, "\n");}
+#define logi(args...) if (_logging_mask & 0x8) {fprintf(stdout, "[    info ] "); fprintf(stdout, args); fprintf(stdout, "\n");}
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \

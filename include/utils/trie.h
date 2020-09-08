@@ -24,4 +24,9 @@ trie trie_insert(trie t, char *key, void *val);
 
 void trie_deinit(trie t);
 
+char trie_collect_garbage(trie t);
+
+char trie_empty_tree(trie t);
+
+
 #endif //DNS_RELAY_TRIE_H

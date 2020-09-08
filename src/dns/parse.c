@@ -52,8 +52,10 @@ char *parse_label(char *current, char *orig_msg, dn_label_t *label, int *ret_cod
     char *ret = 0;
     if (((len >> 14) & 0x3) == 0x3) { // label pointer
         uint16_t offset = len & 0x3fff;
-        ret = current + 2;
-        parse_label(orig_msg + offset, orig_msg, label, ret_code);
+        ret = parse_label(orig_msg + offset, orig_msg, label, ret_code);
+        if (*ret_code == DN_PARSE_LABEL_OKAY) {
+            *ret_code = DN_PARSE_LABEL_OKAY_PTR;
+        }
     } else if (((len >> 14) & 0x3) == 0x0) {
         p = current + 1;
         len = (*(uint8_t *)current);
@@ -73,14 +75,34 @@ char *parse_label(char *current, char *orig_msg, dn_label_t *label, int *ret_cod
     return ret;
 }
 
-char *parse_name(char *current, char *orig_msg, dn_name_t *name, int *ret_code) {
+char *parse_name(char *current, char *orig_msg, dn_label_t *label, dns_size_t *name_len, int *ret_code) {
     char *p = current;
+    char *q = 0;
     int pl_ret_code = DN_PARSE_LABEL_OKAY;
     int len = 0;
 
     while (pl_ret_code == DN_PARSE_LABEL_OKAY) {
-        p = parse_label(p, orig_msg, name->labels + len, &pl_ret_code);
+        char *new_p;
+        new_p = parse_label(p, orig_msg, label + len, &pl_ret_code);
         len = len + 1;
+        if (pl_ret_code != DN_PARSE_LABEL_OKAY_PTR) {
+            p = new_p;
+        } else {
+            p = p + 2;
+            q = new_p;
+        }
+    }
+
+    if (pl_ret_code == DN_PARSE_LABEL_OKAY_PTR) {
+        int pn_ret_code = DN_PARSE_NAME_OKAY;
+        dns_size_t ptr_len = 0;
+        parse_name(q, orig_msg, label + len, &ptr_len, &pn_ret_code);
+        if (pn_ret_code == DN_PARSE_NAME_INVALID) {
+            *ret_code = pn_ret_code;
+            return 0;
+        }
+        len += ptr_len;
+        len += 1;
     }
 
     if (pl_ret_code == DN_PARSE_LABEL_INVALID_LEN) {
@@ -89,7 +111,7 @@ char *parse_name(char *current, char *orig_msg, dn_name_t *name, int *ret_code) 
     }
     len = len - 1;
     *ret_code = DN_PARSE_NAME_OKAY;
-    name->len = len;
+    *name_len = len;
 
     return p;
 }
@@ -97,7 +119,7 @@ char *parse_name(char *current, char *orig_msg, dn_name_t *name, int *ret_code) 
 char *parse_question(char *current, char *orig_msg, dns_msg_q_t *q, int *ret_code) {
     char *p = current;
     int pn_code = DN_PARSE_NAME_INVALID;
-    p = parse_name(p, orig_msg, &q->name, &pn_code);
+    p = parse_name(p, orig_msg, q->name.labels, &q->name.len, &pn_code);
     if (pn_code == DN_PARSE_NAME_INVALID) {
         *ret_code = DNS_MSG_PARSE_Q_INVALID;
         return 0;
@@ -151,7 +173,7 @@ int parse_dns_msg(char *msg, dns_msg_t *res) {
 char *parse_rr(char *current, char *orig_msg, dns_msg_rr_t *rr, int *ret_code) {
     char *p = current;
     int code = 0;
-    p = parse_name(p, orig_msg, &rr->name, &code);
+    p = parse_name(p, orig_msg, rr->name.labels, &rr->name.len, &code);
     if (code == DNS_MSG_PARSE_Q_INVALID) {
         *ret_code = DNS_MSG_PARSE_RR_INVALID;
         return 0;
@@ -160,7 +182,7 @@ char *parse_rr(char *current, char *orig_msg, dns_msg_rr_t *rr, int *ret_code) {
     p += 2;
     rr->class = ntohs(*(uint16_t *) p);
     p += 2;
-    rr->ttl = ntohl(*(uint16_t *) p);
+    rr->ttl = ntohl(*(uint32_t *) p);
     p += 4;
     rr->rdlength = ntohs(*(uint16_t *) p);
     p += 2;
