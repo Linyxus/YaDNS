@@ -11,7 +11,8 @@ int main(int argc, const char **argv) {
     // parse arguments
     ap = ap_init();
     ap_add_argument(ap, "server", AP_STR, "Raw remote DNS server address (default 1.1.1.1).", "1.1.1.1");
-    ap_add_argument(ap, "doh_server", AP_STR, "Remote DoH server address (default cloudflare-dns.com).", "cloudflare-dns.com");
+    ap_add_argument(ap, "doh_server", AP_STR, "Remote DoH server address (default cloudflare-dns.com).",
+                    "cloudflare-dns.com");
     int doh_proxy = 0;
     ap_add_argument(ap, "doh_proxy", AP_STORE_TRUE, "Enable DoH proxy mode.", &doh_proxy);
     int max_query = 32;
@@ -22,7 +23,8 @@ int main(int argc, const char **argv) {
     ap_add_argument(ap, "max_udp_req", AP_INT, "Max concurrent UDP request number (default 32).", &max_udp_req);
     ap_add_argument(ap, "curl_verbose", AP_STORE_TRUE, "Enable verbose curl debug output.", NULL);
     int client_port = 2345;
-    ap_add_argument(ap, "client_port", AP_INT, "Client UDP socket port for raw DNS request (default 2345).", &client_port);
+    ap_add_argument(ap, "client_port", AP_INT, "Client UDP socket port for raw DNS request (default 2345).",
+                    &client_port);
     ap_add_argument(ap, "hosts_path", AP_STR, "Path to hosts file.", "/Users/linyxus/dev/dns-relay/hosts.txt");
     int mask = 0xf;
     ap_add_argument(ap, "logging", AP_INT, "Logging mask for controlling output verbosity (default 15).", &mask);
@@ -48,7 +50,7 @@ int main(int argc, const char **argv) {
          ap_get_int(ap, "client_port"),
          ap_get_str(ap, "hosts_path"),
          cwd_buf
-         );
+    );
 
     // init server
     dns_server_init(ap);
