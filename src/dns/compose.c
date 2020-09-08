@@ -32,6 +32,36 @@ char *compose_a_rr(dn_name_t *dn_name, int32_t ip, size_t *len) {
     return rr;
 }
 
+char *compose_header(dns_msg_header_t *header, size_t *msg_len) {
+    char *msg = malloc(12 * sizeof(char));
+    *msg_len = 12;
+    char *p = msg;
+
+    *(uint16_t *) p = htons(header->id);
+    p += 2;
+    *(uint8_t *) p = 0;
+    *(uint8_t *) p = (header->qr << 7) | (header->opcode << 3) | (header->aa << 2) | header->tc
+                     | header->rd;
+    p += 1;
+
+    *(uint8_t *) p = 0;
+    *(uint8_t *) p = (header->ra << 7) | header->rcode;
+    p += 1;
+
+    *(uint16_t *) p = htons(header->qd_cnt);
+    p += 2;
+
+    *(uint16_t *) p = htons(header->an_cnt);
+    p += 2;
+
+    *(uint16_t *) p = htons(header->ns_cnt);
+    p += 2;
+
+    *(uint16_t *) p = htons(header->ar_cnt);
+
+    return msg;
+}
+
 char *compose_a_rr_ans(char *raw, size_t raw_len, char *a_rr, size_t rr_len, size_t *len) {
     *len = raw_len + rr_len;
     char *msg = malloc(sizeof(char) * *len);

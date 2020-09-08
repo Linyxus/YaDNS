@@ -3,6 +3,7 @@
 //
 
 #include <dns/print.h>
+#include <utils/logging.h>
 
 void print_dns_domain_name(dn_name_t *name, char *orig_msg) {
     for (int i = 0; i < name->len; i++) {

@@ -195,7 +195,7 @@ static void on_srv_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
         if (ret_code != DNS_MSG_PARSE_OKAY) {
             loge("Error parsing dns message");
         }
-        logi("DNS message id %d, qcount %d", parsed_msg.header.id, parsed_msg.header.qd_cnt);
+//        logi("DNS message id %d, qcount %d", parsed_msg.header.id, parsed_msg.header.qd_cnt);
         print_dns_msg(&parsed_msg);
 
         int hit = 0;
@@ -222,7 +222,21 @@ static void on_srv_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
                 logi("request handler: hosts");
                 hit = 1;
                 if (!rec->ip) {
-                    logw("Hit invalid address 0.0.0.0, ignore request");
+                    logw("Hit invalid address 0.0.0.0, return nxdomain");
+                    dns_msg_header_t h = parsed_msg.header;
+                    h.qr = 1;
+                    h.ar_cnt = 0;
+                    h.qd_cnt = 0;
+                    h.ns_cnt = 0;
+                    h.an_cnt = 0;
+                    h.rcode = 3;
+
+                    size_t reply_len;
+                    reply = compose_header(&h, &reply_len);
+                    uv_udp_send_t *send_req = malloc(sizeof(uv_udp_send_t));
+                    uv_buf_t send_buf = uv_buf_init(reply, reply_len);
+                    uv_udp_send(send_req, srv_sock, &send_buf, 1, addr, on_send);
+                    free(reply);
                 } else {
                     // compose rr record
                     size_t rr_len;
