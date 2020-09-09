@@ -10,7 +10,7 @@ int main(int argc, const char **argv) {
     getcwd(cwd_buf, FILENAME_MAX);
     // parse arguments
     ap = ap_init();
-    ap_add_argument(ap, "server", AP_STR, "Raw remote DNS server address (default 1.1.1.1).", "114.114.114.114");
+    ap_add_argument(ap, "server", AP_STR, "Raw remote DNS server address (default 114.114.114.114).", "114.114.114.114");
     ap_add_argument(ap, "doh_server", AP_STR, "Remote DoH server address (default cloudflare-dns.com).",
                     "cloudflare-dns.com");
     int doh_proxy = 0;
