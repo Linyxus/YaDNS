@@ -90,6 +90,7 @@ typedef struct dns_msg_rr dns_msg_rr_t;
 struct dns_msg {
     char raw[DNS_MSG_MAX_LEN];
     uint32_t msg_len;
+    uint32_t query_len;
     dns_msg_header_t header;
     dns_msg_q_t question[DNS_MSG_MAX_ENTRY];
     dns_msg_rr_t answer[DNS_MSG_MAX_ENTRY];

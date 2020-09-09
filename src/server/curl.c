@@ -178,7 +178,7 @@ static void check_multi_info(void)
                                 uint32_t ttl = rr->ttl;
 //                    uint32_t ttl = 120;
 
-                                lc_insert(db_lru_cache, name, ip, ttl);
+                                rc_insert(db_resp_cache, name, ip, ttl);
                             }
                         }
 
@@ -189,7 +189,7 @@ static void check_multi_info(void)
                                 db_ip_t ip = ntohl(*(uint32_t *) (rr->data_offset + msg.raw));
                                 uint32_t ttl = rr->ttl;
 
-                                lc_insert(db_lru_cache, name, ip, ttl);
+                                rc_insert(db_resp_cache, name, ip, ttl);
                             }
                         }
                     }

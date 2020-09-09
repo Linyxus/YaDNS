@@ -6,7 +6,7 @@
 #include <assert.h>
 #include "string.h"
 
-char *compose_a_rr(dn_name_t *dn_name, int32_t ip, size_t *len) {
+char *compose_a_rr(dn_name_t *dn_name, int32_t ip, uint32_t ttl, size_t *len) {
     char *rr = malloc(sizeof(char) * 16);
     assert(dn_name->len);
     *len = 16;
@@ -21,7 +21,7 @@ char *compose_a_rr(dn_name_t *dn_name, int32_t ip, size_t *len) {
     *(uint16_t *) p = htons(DNS_QCLASS_IN);
     // set ttl
     p += 2;
-    *(uint16_t *) p = htons(2700);
+    *(uint32_t *) p = htonl(ttl);
     // set rd length
     p += 4;
     *(uint16_t *) p = htons(4);

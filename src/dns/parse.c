@@ -144,6 +144,8 @@ int parse_dns_msg(char *msg, dns_msg_t *res) {
             return DNS_MSG_PARSE_INVALID;
         }
     }
+    res->query_len = p - msg;
+
     for (dns_size_t i = 0; i < res->header.an_cnt; i++) {
         int pr_code = DNS_MSG_PARSE_RR_OKAY;
         p = parse_rr(p, msg, res->answer + i, &pr_code);

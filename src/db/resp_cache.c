@@ -2,7 +2,7 @@
 // Created by Yichen Xu on 2020/9/8.
 //
 
-#include <db/lru_cache.h>
+#include <db/resp_cache.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -36,38 +36,38 @@ trie trie_insert_db_dn(trie t, dn_db_name_t *name, void *val) {
     return trie_insert(t, key, val);
 }
 
-trie lc_init() {
+trie rc_init() {
     return trie_init();
 }
 
-void lc_insert(trie t, dn_db_name_t *name, db_ip_t ip, uint32_t ttl) {
-    void *u = lc_node_init(name, ip, ttl);
+void rc_insert(trie t, dn_db_name_t *name, db_ip_t ip, uint32_t ttl) {
+    void *u = rc_node_init(name, ip, ttl);
     char *k = compose_trie_key(name);
     void *v = trie_lookup(t, k);
     if (v) {
-        lc_node_deinit(v);
+        rc_node_deinit(v);
     }
     trie_insert_db_dn(t, name, u);
 
     free(k);
 }
 
-db_ip_t lc_lookup(trie t, dn_db_name_t *name) {
+resp_cache_node_t *rc_lookup(trie t, dn_db_name_t *name) {
     char *key = compose_trie_key(name);
-    lru_cache_node_t *node = trie_lookup(t, key);
+    resp_cache_node_t *node = trie_lookup(t, key);
     if (!node) return 0;
     if (node->expire_at <= now()) {
-        lc_node_deinit(node);
+        rc_node_deinit(node);
         trie_insert(t, key, 0);
         trie_collect_garbage(t);
         return 0;
     }
     free(key);
-    return node->record->ip;
+    return node;
 }
 
-lru_cache_node_t *lc_node_init(dn_db_name_t *name, db_ip_t ip, uint32_t ttl) {
-    lru_cache_node_t *node = malloc(sizeof(lru_cache_node_t));
+resp_cache_node_t *rc_node_init(dn_db_name_t *name, db_ip_t ip, uint32_t ttl) {
+    resp_cache_node_t *node = malloc(sizeof(resp_cache_node_t));
     node->expire_at = now() + ttl;
     node->record = malloc(sizeof(dn_db_record_t));
     node->record->name = name;
@@ -76,7 +76,7 @@ lru_cache_node_t *lc_node_init(dn_db_name_t *name, db_ip_t ip, uint32_t ttl) {
     return node;
 }
 
-void lc_node_deinit(lru_cache_node_t *node) {
+void rc_node_deinit(resp_cache_node_t *node) {
     destroy_name(node->record->name);
     free(node->record);
     free(node);

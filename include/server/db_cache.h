@@ -7,12 +7,12 @@
 
 #include <db/tree.h>
 #include <db/cache.h>
-#include <db/lru_cache.h>
+#include <db/resp_cache.h>
 #include <utils/argparse.h>
 
 extern tree_t *db_tree;
 extern cache_t *db_cache;
-extern trie db_lru_cache;
+extern trie db_resp_cache;
 
 void db_cache_init(ap_t *ap);
 

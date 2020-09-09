@@ -8,7 +8,7 @@
 #include <server/db_cache.h>
 #include <server/curl.h>
 #include <db/io.h>
-#include <db/lru_cache.h>
+#include <db/resp_cache.h>
 #include <dns/utils.h>
 #include <dns/compose.h>
 #include <dns/print.h>
@@ -115,7 +115,7 @@ static void on_cli_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
                     uint32_t ttl = rr->ttl;
 //                    uint32_t ttl = 120;
 
-                    lc_insert(db_lru_cache, name, ip, ttl);
+                    rc_insert(db_resp_cache, name, ip, ttl);
                 }
             }
 
@@ -126,7 +126,7 @@ static void on_cli_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
                     db_ip_t ip = ntohl(*(uint32_t *) (rr->data_offset + msg.raw));
                     uint32_t ttl = rr->ttl;
 
-                    lc_insert(db_lru_cache, name, ip, ttl);
+                    rc_insert(db_resp_cache, name, ip, ttl);
                 }
             }
         }
@@ -240,9 +240,9 @@ static void on_srv_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
                 } else {
                     // compose rr record
                     size_t rr_len;
-                    rr = compose_a_rr(&parsed_msg.question[0].name, rec->ip, &rr_len);
+                    rr = compose_a_rr(&parsed_msg.question[0].name, rec->ip, 9600, &rr_len);
                     size_t reply_len;
-                    reply = compose_a_rr_ans(parsed_msg.raw, parsed_msg.msg_len, rr, rr_len, &reply_len);
+                    reply = compose_a_rr_ans(parsed_msg.raw, parsed_msg.query_len, rr, rr_len, &reply_len);
                     uv_udp_send_t *send_req = malloc(sizeof(uv_udp_send_t));
                     uv_buf_t send_buf = uv_buf_init(reply, reply_len);
                     uv_udp_send(send_req, srv_sock, &send_buf, 1, addr, on_send);
@@ -252,20 +252,25 @@ static void on_srv_read(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf,
             }
             // destroy_name(name); // do not destroy name right now. Saved for further use
         }
-        // then check lru cache
+        // then check response cache
         if (parsed_msg.header.qd_cnt == 1 && parsed_msg.question[0].type == DNS_QTYPE_A) {
             name = db_name_from_dns_name(&parsed_msg.question[0].name, parsed_msg.raw);
-            db_ip_t ip = lc_lookup(db_lru_cache, name);
-            if (ip) {
-                logi("request handler: local lru cache");
+            resp_cache_node_t *cache_rec = rc_lookup(db_resp_cache, name);
+            if (cache_rec) {
+                logi("request handler: local response cache");
                 char *rr;
                 char *reply;
                 hit = 1;
                 // compose rr record
                 size_t rr_len;
-                rr = compose_a_rr(&parsed_msg.question[0].name, ip, &rr_len);
+                uint32_t ttl = 0;
+                uint64_t t = now();
+                if (t < cache_rec->expire_at) {
+                    ttl = cache_rec->expire_at - t;
+                }
+                rr = compose_a_rr(&parsed_msg.question[0].name, cache_rec->record->ip, ttl, &rr_len);
                 size_t reply_len;
-                reply = compose_a_rr_ans(parsed_msg.raw, parsed_msg.msg_len, rr, rr_len, &reply_len);
+                reply = compose_a_rr_ans(parsed_msg.raw, parsed_msg.query_len, rr, rr_len, &reply_len);
                 uv_udp_send_t *send_req = malloc(sizeof(uv_udp_send_t));
                 uv_buf_t send_buf = uv_buf_init(reply, reply_len);
                 uv_udp_send(send_req, srv_sock, &send_buf, 1, addr, on_send);
