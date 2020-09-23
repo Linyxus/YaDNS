@@ -8,7 +8,7 @@ A dns relay server that can be used as a local DNS over HTTPS (DoH) proxy.
 
 - Supports loading local resolving rules (`hosts.txt`).
 
-- Implements an efficient cache implemented in Trie that will cache A-typed resource records.
+- Implements an efficient cache with Trie that will cache A-typed resource records.
 
 ## Build
 
