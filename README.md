@@ -1,6 +1,6 @@
 # YaDNS
 
-A dns relay server that can be used as a local DNS over HTTPS (DoH) proxy.
+Yet Another DNS relay server that can be used as a local DNS over HTTPS (DoH) proxy.
 
 ## Features
 
