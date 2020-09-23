@@ -58,3 +58,5 @@ build/
 .idea/
 
 **/__pycache__/
+
+doc/.texpadtmp

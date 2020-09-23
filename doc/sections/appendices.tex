@@ -1,0 +1,70 @@
+\part{附录}
+%\section{Hash函数性能分析}
+%\label{sec:hash-func-benchmark}
+
+\section{为什么要使用 \lstinline{libuv} ？}
+\label{sec:why-libuv}
+
+YaDNS直接使用 \lstinline{libuv} 实现的事件循环模型而没有自己通过系统调用来实现并发，主要有下面的一些原因。
+
+\paragraph{开发效率}
+
+\lstinline{libuv} 提供了一整套基于事件循环的并发接口。可以很大地提升开发效率。除此以外，DoH实现所依赖的 \lstinline{libcurl} 也提供的Multi接口也已很容易地和 \lstinline{libuv}提供的接口相结合，只需要比较少的新增代码，就能够将 Curl 句柄结合入 \lstinline{libuv} 提供的并发模型中。
+
+\paragraph{可移植性}
+
+虽然系统提供的系统调用同样可以实现基于循环的并发。但不同系统提供的相似功能的调用是不同的。下表给出了不同系统提供的调用。
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{cc}
+    \toprule
+    操作系统 & 系统调用 \\
+    \midrule
+    Windows & \texttt{select} \\
+    Linux & \texttt{epoll} \\
+    macOS (BSD) & \texttt{kqueue} \\
+    \bottomrule
+  \end{tabular}
+  \caption{不同系统提供的系统调用}
+\end{table}
+
+因而，若自己调用这些系统调用来实现并发，可移植性将大打折扣，需要将并发循环相关的代码使用不同系统的API进行重写，较为繁荣，且不具备较大意义。\lstinline{libuv}已经为我们做好了对于不同底层API的封装，提供了统一、成熟、较为易用的接口。因而使用它事实上更加合理。
+
+\section{编译与构建}
+
+YaDNS构建依赖于如下工具。
+\begin{itemize}
+  \item CMake
+  \item Ninja (Optional)
+  \item Conan
+\end{itemize}
+
+在构建时，首先创建构建输出文件夹，并使用Conan安装依赖库：
+\begin{verbatim}
+mkdir -p build/default
+cd build/default
+conan install ../..
+\end{verbatim}
+
+然后，使用CMake生成Ninja构建文件：
+\begin{verbatim}
+cmake -GNinja ../..
+\end{verbatim}
+
+最后，使用Ninja进行编译：
+\begin{verbatim}
+ninja
+\end{verbatim}
+
+在编译成功后，可以运行单元测试：
+\begin{verbatim}
+./bin/ctest
+\end{verbatim}
+而编译好的YaDNS可执行文件也在 \texttt{./build/default/bin/} 文件夹中。
+
+如果不想使用Ninja，也可以使用CMake默认的Makefile系统进行编译：
+\begin{verbatim}
+cmake ../..
+make
+\end{verbatim}
