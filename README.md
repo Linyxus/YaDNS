@@ -14,6 +14,7 @@ Yet Another DNS relay server that can be used as a local DNS over HTTPS (DoH) pr
 
 ```shell
 mkdir -p build/default
+cd build/default
 conan install ../..
 cmake -GNinja ../..
 ninja
